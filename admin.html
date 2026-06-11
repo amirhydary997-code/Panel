@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>V5 ULTRA ADMIN PANEL</title>
 <style>
-body{margin:0;font-family:Arial;background:#0b0b0f;color:gold;}
+body{margin:0;font-family:Arial;background:#0b0b0f;color:gold;text-align:center;}
 .center{display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;}
 input, textarea{width:300px;padding:10px;margin:8px;border-radius:10px;border:none;outline:none;}
 button{padding:10px 15px;margin:5px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;}
@@ -19,37 +19,38 @@ button{padding:10px 15px;margin:5px;border:none;border-radius:10px;cursor:pointe
 <body>
 
 <div id="login" class="center">
-<h2>ADMIN LOGIN</h2>
-<input id="pass" type="password" placeholder="Password">
-<button class="gold" onclick="login()">Enter</button>
+    <h2>ADMIN LOGIN</h2>
+    <input id="pass" type="password" placeholder="Password">
+    <button class="gold" onclick="login()">Enter</button>
 </div>
 
 <div id="panel">
-<div class="box">
-<h2>⚙️ ADMIN PANEL</h2>
-<textarea id="newConfig" placeholder="Paste config here..."></textarea>
-<br>
-<button class="gold" onclick="addConfig()">➕ Add Config</button>
-<button class="gray" onclick="deleteConfig()">🗑 Delete Last</button>
-<h3>📦 Config List</h3>
-<div id="list"></div>
-</div>
+    <div class="box">
+        <h2>⚙️ ADMIN PANEL</h2>
+        <textarea id="newConfig" placeholder="Paste config here..."></textarea>
+        <br>
+        <button class="gold" onclick="addConfig()">➕ Add Config</button>
+        <button class="gray" onclick="deleteConfig()">🗑 Delete Last</button>
+        <h3>📦 Config List</h3>
+        <div id="list"></div>
+    </div>
 </div>
 
 <script>
-const BIN_ID = "6a2b27c1da38895dfeb0ddee"; 
+// مقادیر دقیق خودت رو اینجا قرار بده
+const BIN_ID = "6a2b44d2f5f4af5e29e2fb37"; 
 const MASTER_KEY = "$2a$10$k2TxANCgbAuEeTZ7I7.yC.VCsjqxIShP1PazTCKH5LpPmuZvzWDQy";
 
 let configs = [];
 
 function login(){
-if(document.getElementById("pass").value === "admin"){
-document.getElementById("login").style.display="none";
-document.getElementById("panel").style.display="block";
-loadFromCloud();
-}else{
-alert("Wrong password");
-}
+    if(document.getElementById("pass").value === "admin"){
+        document.getElementById("login").style.display="none";
+        document.getElementById("panel").style.display="block";
+        loadFromCloud();
+    } else {
+        alert("Wrong password");
+    }
 }
 
 async function loadFromCloud() {
@@ -58,50 +59,54 @@ async function loadFromCloud() {
             headers: { "X-Master-Key": MASTER_KEY }
         });
         let data = await res.json();
+        // در API v3 داده‌ها داخل record قرار دارند
         configs = (data.record && data.record.configs) ? data.record.configs : [];
         render();
-    } catch(e) { console.error("خطا در بارگذاری", e); }
+    } catch(e) { console.error("Error loading:", e); }
 }
 
 async function saveToCloud(){
     try {
-        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        let response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 "X-Master-Key": MASTER_KEY
             },
-            body: JSON.stringify({ configs: configs })
+            // در API v3 باید کل آبجکت رو بفرستیم
+            body: JSON.stringify({ configs: configs }) 
         });
-        alert("تغییرات با موفقیت در اینترنت ذخیره شد! ☁️");
-    } catch(e) { alert("خطا در ذخیره‌سازی آنلاین"); }
+        if(response.ok) {
+            console.log("Saved successfully");
+        }
+    } catch(e) { alert("خطا در ذخیره‌سازی"); }
 }
 
 async function addConfig(){
-let val = document.getElementById("newConfig").value;
-if(!val) return;
-configs.push(val);
-render();
-document.getElementById("newConfig").value="";
-await saveToCloud();
+    let val = document.getElementById("newConfig").value;
+    if(!val) return;
+    configs.push(val);
+    render();
+    document.getElementById("newConfig").value="";
+    await saveToCloud();
 }
 
 async function deleteConfig(){
-if(configs.length === 0) return;
-configs.pop();
-render();
-await saveToCloud();
+    if(configs.length === 0) return;
+    configs.pop();
+    render();
+    await saveToCloud();
 }
 
 function render(){
-let list = document.getElementById("list");
-list.innerHTML="";
-configs.forEach((c,i)=>{
-let div = document.createElement("div");
-div.className="config";
-div.innerText = (i+1)+": "+c;
-list.appendChild(div);
-});
+    let list = document.getElementById("list");
+    list.innerHTML="";
+    configs.forEach((c,i)=>{
+        let div = document.createElement("div");
+        div.className="config";
+        div.innerText = (i+1)+": "+c;
+        list.appendChild(div);
+    });
 }
 </script>
 </body>
