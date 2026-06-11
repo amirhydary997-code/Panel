@@ -37,7 +37,8 @@ button{padding:10px 15px;margin:5px;border:none;border-radius:10px;cursor:pointe
 </div>
 
 <script>
-const BIN_ID = "6a2b27c1da38895dfeb0ddee"; 
+// توجه: شناسه BIN_ID زیر را با شناسه دیتابیس ۲۴ کاراکتری درست خودت در jsonbin.io جایگزین کن
+const BIN_ID = "666a2b27c1da38895dfeb0dd"; 
 const MASTER_KEY = "$2a$10$k2TxANCgbAuEeTZ7I7.yC.VCsjqxIShP1PazTCKH5LpPmuZvzWDQy";
 
 let configs = [];
@@ -52,22 +53,24 @@ alert("Wrong password");
 }
 }
 
-// اصلاح ساختار لود شدن اطلاعات از سرور آنلاین
 async function loadFromCloud() {
     try {
         let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
             headers: { "X-Master-Key": MASTER_KEY }
         });
+        if(!res.ok) { throw new Error("Database error"); }
         let data = await res.json();
-        // اصلاح این خط برای هماهنگی با ساختار دیتابیس شما
         configs = (data.record && data.record.configs) ? data.record.configs : [];
         render();
-    } catch(e) { console.error("خطا در بارگذاری اولیه آنلاین", e); }
+    } catch(e) { 
+        console.error("خطا در بارگذاری آنلاین", e);
+        alert("خطا در اتصال به دیتابیس! شناسه BIN_ID را چک کنید.");
+    }
 }
 
 async function saveToCloud(){
     try {
-        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -75,14 +78,17 @@ async function saveToCloud(){
             },
             body: JSON.stringify({ configs: configs })
         });
-        alert("تغییرات با موفقیت در اینترنت ذخیره شد! ☁️");
+        if(res.ok) {
+            alert("تغییرات با موفقیت در اینترنت ذخیره شد! ☁️");
+        } else {
+            alert("سرور اجازه ذخیره نداد. احتمالا BIN_ID اشتباه است.");
+        }
     } catch(e) { alert("خطا در ذخیره‌سازی آنلاین"); }
 }
 
 async function addConfig(){
 let val = document.getElementById("newConfig").value;
 if(!val) return;
-
 configs.push(val);
 render();
 document.getElementById("newConfig").value="";
@@ -90,6 +96,7 @@ await saveToCloud();
 }
 
 async function deleteConfig(){
+if(configs.length === 0) return;
 configs.pop();
 render();
 await saveToCloud();
