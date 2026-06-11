@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V5 ULTRA ADMIN PANEL</title>
+<style>
+body{margin:0;font-family:Arial;background:#0b0b0f;color:gold;}
+.center{display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;}
+input, textarea{width:300px;padding:10px;margin:8px;border-radius:10px;border:none;outline:none;}
+button{padding:10px 15px;margin:5px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;}
+.gold{background:gold;}
+.gray{background:#333;color:gold;}
+#panel{display:none;padding:20px;}
+.box{max-width:700px;margin:auto;background:#111;padding:15px;border-radius:15px;box-shadow:0 0 20px rgba(255,215,0,0.2);}
+.config{background:rgba(255,255,255,0.05);padding:10px;margin:8px 0;border-radius:10px;word-break:break-all;}
+</style>
+</head>
+<body>
+
+<div id="login" class="center">
+<h2>ADMIN LOGIN</h2>
+<input id="pass" type="password" placeholder="Password">
+<button class="gold" onclick="login()">Enter</button>
+</div>
+
+<div id="panel">
+<div class="box">
+<h2>⚙️ ADMIN PANEL</h2>
+<textarea id="newConfig" placeholder="Paste config here..."></textarea>
+<br>
+<button class="gold" onclick="addConfig()">➕ Add Config</button>
+<button class="gray" onclick="deleteConfig()">🗑 Delete Last</button>
+<h3>📦 Config List</h3>
+<div id="list"></div>
+</div>
+</div>
+
+<script>
+const BIN_ID = "6a2b27c1da38895dfeb0ddee"; 
+const MASTER_KEY = "$2a$10$k2TxANCgbAuEeTZ7I7.yC.VCsjqxIShP1PazTCKH5LpPmuZvzWDQy";
+
+let configs = [];
+
+function login(){
+if(document.getElementById("pass").value === "admin"){
+document.getElementById("login").style.display="none";
+document.getElementById("panel").style.display="block";
+loadFromCloud();
+}else{
+alert("Wrong password");
+}
+}
+
+// اصلاح ساختار لود شدن اطلاعات از سرور آنلاین
+async function loadFromCloud() {
+    try {
+        let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+            headers: { "X-Master-Key": MASTER_KEY }
+        });
+        let data = await res.json();
+        // اصلاح این خط برای هماهنگی با ساختار دیتابیس شما
+        configs = (data.record && data.record.configs) ? data.record.configs : [];
+        render();
+    } catch(e) { console.error("خطا در بارگذاری اولیه آنلاین", e); }
+}
+
+async function saveToCloud(){
+    try {
+        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": MASTER_KEY
+            },
+            body: JSON.stringify({ configs: configs })
+        });
+        alert("تغییرات با موفقیت در اینترنت ذخیره شد! ☁️");
+    } catch(e) { alert("خطا در ذخیره‌سازی آنلاین"); }
+}
+
+async function addConfig(){
+let val = document.getElementById("newConfig").value;
+if(!val) return;
+
+configs.push(val);
+render();
+document.getElementById("newConfig").value="";
+await saveToCloud();
+}
+
+async function deleteConfig(){
+configs.pop();
+render();
+await saveToCloud();
+}
+
+function render(){
+let list = document.getElementById("list");
+list.innerHTML="";
+configs.forEach((c,i)=>{
+let div = document.createElement("div");
+div.className="config";
+div.innerText = (i+1)+": "+c;
+list.appendChild(div);
+});
+}
+</script>
+</body>
+</html>
