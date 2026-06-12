@@ -52,7 +52,7 @@ body.light .box{background:#fff;}
 
 <div class="container">
 <div class="box">
-<div id="configBox" class="config"></div>
+<div id="configBox" class="config">Loading...</div>
 </div>
 </div>
 
@@ -63,7 +63,7 @@ body.light .box{background:#fff;}
 
 <div class="footer">
 <span>✈️</span>
-<span>@HI_SONI</span>
+<span>@Net_Pulseee</span>
 </div>
 </div>
 
@@ -82,7 +82,7 @@ function login(){
 if(document.getElementById("pass").value==="amir"){
 document.getElementById("login").style.display="none";
 document.getElementById("app").style.display="flex";
-loadConfigs(); // فراخوانی کانفیگ‌ها از حافظه مشترک بعد از لاگین
+loadConfigs(); 
 }else alert("Wrong password");
 }
 
@@ -90,19 +90,26 @@ function toggleTheme(){
 document.body.classList.toggle("light");
 }
 
-// آرایه کانفیگ‌ها که مقدارش رو از پنل ادمین می‌گیره
 let configs = [];
 let i = 0;
 
-// 🔄 تابع خواندن اطلاعات ثبت شده توسط پنل ادمین
+// 🔄 تابع جدید: خواندن اطلاعات از فایل آنلاین data.json
 function loadConfigs() {
-    configs = JSON.parse(localStorage.getItem("shared_configs") || "[]");
-    if(configs.length === 0) {
-        document.getElementById("configBox").innerText = "هنوز هیچ کانفیگی توسط ادمین ثبت نشده است! ❌";
-    } else {
-        i = 0; // ریست کردن شمارنده
-        show();
-    }
+    fetch('data.json')
+    .then(response => response.json())
+    .then(data => {
+        configs = data.configs;
+        if(configs.length === 0) {
+            document.getElementById("configBox").innerText = "هنوز کانفیگی ثبت نشده است! ❌";
+        } else {
+            i = 0;
+            show();
+        }
+    })
+    .catch(err => {
+        document.getElementById("configBox").innerText = "خطا در دریافت فایل دیتای آنلاین! ⚠️";
+        console.error(err);
+    });
 }
 
 function show(){
